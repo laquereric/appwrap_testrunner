@@ -1,0 +1,110 @@
+@startuml appwrap_testrunner_architecture
+
+!define LIGHTORANGE #FFE4B5
+!define LIGHTBLUE #E6F3FF
+!define LIGHTGREEN #E8F5E9
+
+package "Appwrap::Testrunner" {
+  
+  class "Appwrap::Testrunner" as Main LIGHTORANGE {
+    + BASE_DIR : String
+    + run(test_uuid, &block) : Hash
+    + test_path(test_uuid) : String
+  }
+  
+  class Runner LIGHTBLUE {
+    - test_uuid : String
+    - test_dir : String
+    + initialize(test_uuid)
+    + execute(&block) : Hash
+    - setup_test_directory()
+    - capture_test_call() : Hash
+    - write_json_file(filename, data)
+  }
+  
+  class Logger LIGHTGREEN {
+    - test_dir : String
+    - log_entries : Array
+    - log_file : String
+    + initialize(test_dir)
+    + log(level, message, metadata) : Hash
+    + info(message, metadata) : Hash
+    + warn(message, metadata) : Hash
+    + error(message, metadata) : Hash
+    + debug(message, metadata) : Hash
+    + finalize()
+  }
+  
+  class TestExecutor LIGHTGREEN {
+    - logger : Logger
+    - duration_ms : Float
+    + initialize(logger)
+    + execute(&block) : Object
+    + log(message, metadata)
+    + step(step_name, &block) : Object
+  }
+  
+  class Error {
+    <<StandardError>>
+  }
+}
+
+package "Output Files" {
+  file "test_call.json" as CallJSON {
+    test_uuid
+    called_at
+    ruby_version
+    gem_version
+    working_directory
+    environment
+  }
+  
+  file "test_response.json" as ResponseJSON {
+    test_uuid
+    status
+    result/error
+    executed_at
+    duration_ms
+  }
+  
+  file "test_log.json" as LogJSON {
+    total_entries
+    entries[]
+  }
+}
+
+Main ..> Runner : creates
+Runner *-- Logger : contains
+Runner *-- TestExecutor : creates
+TestExecutor --> Logger : uses
+
+Runner ..> CallJSON : writes
+Runner ..> ResponseJSON : writes
+Logger ..> LogJSON : writes
+
+note right of Main
+  Entry point for test execution.
+  Provides convenience methods
+  for running tests.
+end note
+
+note right of Runner
+  Manages test execution lifecycle.
+  Creates isolated test directories.
+  Coordinates logging and output.
+end note
+
+note right of Logger
+  Captures structured logs with
+  timestamps and metadata.
+  Supports multiple log levels.
+end note
+
+note right of TestExecutor
+  Executes test blocks and
+  measures duration.
+  Provides step-based execution.
+end note
+
+@enduml
+

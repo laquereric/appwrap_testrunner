@@ -1,0 +1,53 @@
+classDiagram
+    class AppwrapTestrunner {
+        +String BASE_DIR
+        +run(test_uuid, block) Hash
+        +test_path(test_uuid) String
+    }
+    
+    class Runner {
+        -String test_uuid
+        -String test_dir
+        +initialize(test_uuid)
+        +execute(block) Hash
+        -setup_test_directory()
+        -capture_test_call() Hash
+        -write_json_file(filename, data)
+    }
+    
+    class Logger {
+        -String test_dir
+        -Array log_entries
+        -String log_file
+        +initialize(test_dir)
+        +log(level, message, metadata) Hash
+        +info(message, metadata) Hash
+        +warn(message, metadata) Hash
+        +error(message, metadata) Hash
+        +debug(message, metadata) Hash
+        +finalize()
+    }
+    
+    class TestExecutor {
+        -Logger logger
+        -Float duration_ms
+        +initialize(logger)
+        +execute(block) Object
+        +log(message, metadata)
+        +step(step_name, block) Object
+    }
+    
+    class OutputFiles {
+        <<interface>>
+        test_call.json
+        test_response.json
+        test_log.json
+    }
+    
+    AppwrapTestrunner ..> Runner : creates
+    Runner *-- Logger : contains
+    Runner *-- TestExecutor : creates
+    TestExecutor --> Logger : uses
+    Runner ..> OutputFiles : writes
+    Logger ..> OutputFiles : writes
+
