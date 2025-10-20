@@ -52,5 +52,5 @@ Gemfile.lock
 .rspec_status
 
 # Test run directories
-appwrap/
+/appwrap/
 
